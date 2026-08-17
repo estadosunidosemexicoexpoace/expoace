@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quetzal AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0F1319;
+    --bg-elevated: #161C25;
+    --sidebar: #131922;
+    --line: #232B37;
+    --text: #E9EDF3;
+    --text-dim: #93A0B4;
+    --text-faint: #5C6B80;
+    --accent: #E3A857;
+    --accent-dim: #4A3B22;
+    --accent-glow: rgba(227,168,87,0.35);
+    --danger: #E2685C;
+    --user-bubble: #1E2733;
+    --bot-bubble: #182028;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand,.display{font-family:'Space Grotesk',sans-serif;}
+
+  /* ---------- Loading shim ---------- */
+  #boot-loader{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:var(--bg);z-index:999;
+  }
+  .boot-ring{
+    width:40px;height:40px;border-radius:50%;
+    border:3px solid var(--line);border-top-color:var(--accent);
+    animation:spin 0.9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- Login screen ---------- */
+  #login-screen{
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+  }
+  #login-screen::before{
+    content:"";
+    position:absolute;
+    top:-20%;left:50%;
+    width:900px;height:900px;
+    transform:translateX(-50%);
+    background:radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+    opacity:0.5;
+    pointer-events:none;
+  }
+  .login-card{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:400px;
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:44px 36px 36px;
+    text-align:center;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .login-orbit{
+    width:64px;height:64px;
+    margin:0 auto 22px;
+    position:relative;
+  }
+  .login-orbit .dot{
+    position:absolute;width:10px;height:10px;border-radius:50%;
+    background:var(--accent);
+    top:50%;left:50%;
+    margin:-5px 0 0 -5px;
+    animation:orbit 2.6s linear infinite;
+  }
+  .login-orbit .dot:nth-child(1){animation-delay:0s;opacity:1;}
+  .login-orbit .dot:nth-child(2){animation-delay:-0.87s;opacity:0.6;}
+  .login-orbit .dot:nth-child(3){animation-delay:-1.74s;opacity:0.3;}
+  @keyframes orbit{
+    from{transform:rotate(0deg) translateX(26px) rotate(0deg);}
+    to{transform:rotate(360deg) translateX(26px) rotate(-360deg);}
+  }
+  .login-card h1{
+    font-size:22px;
+    margin:0 0 8px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .login-card p{
+    color:var(--text-dim);
+    font-size:14px;
+    line-height:1.5;
+    margin:0 0 30px;
+  }
+  .login-foot{
+    margin-top:22px;
+    font-size:12px;
+    color:var(--text-faint);
+    line-height:1.5;
+  }
+  #login-error{
+    margin-top:16px;
+    font-size:13px;
+    color:var(--danger);
+    display:none;
+    text-align:left;
+    line-height:1.5;
+  }
+  #config-warning{
+    margin-top:16px;
+    font-size:12.5px;
+    color:var(--accent);
+    display:none;
+    text-align:left;
+    line-height:1.6;
+    background:var(--accent-dim);
+    border:1px solid var(--accent);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .login-divider{
+    display:flex;align-items:center;gap:12px;
+    margin:22px 0 18px;
+    color:var(--text-faint);
+    font-size:12px;
+  }
+  .login-divider::before,.login-divider::after{
+    content:"";flex:1;height:1px;background:var(--line);
+  }
+  #email-form{
+    display:flex;flex-direction:column;gap:10px;
+    text-align:left;
+  }
+  #email-form input{
+    width:100%;
+    padding:11px 14px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  #email-form input:focus{border-color:var(--accent);}
+  .email-btn-row{
+    display:flex;gap:8px;
+    margin-top:2px;
+  }
+  .email-btn-row button{
+    flex:1;
+    padding:11px 12px;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    border:1px solid var(--line);
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .email-btn-row button:hover{transform:translateY(-1px);}
+  #email-signin-btn{
+    background:var(--accent);
+    color:#1a1305;
+    border-color:var(--accent);
+  }
+  #email-signup-btn{
+    background:transparent;
+    color:var(--text);
+  }
+  #email-signup-btn:hover{border-color:var(--accent);}
+  #guest-btn{
+    width:100%;
+    margin-top:14px;
+    padding:11px 14px;
+    background:transparent;
+    border:1px dashed var(--line);
+    color:var(--text-dim);
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:500;
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  #guest-btn:hover{border-color:var(--accent); color:var(--text);}
+
+  /* ---------- App shell ---------- */
+  #app-screen{
+    display:none;
+    height:100vh;
+    grid-template-columns:280px 1fr;
+  }
+  #app-screen.active{display:grid;}
+
+  /* Sidebar */
+  #sidebar{
+    background:var(--sidebar);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    height:100%;
+  }
+  .sidebar-header{
+    padding:22px 20px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .sidebar-header .brand{
+    font-size:16px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .sidebar-header .brand .brand-dot{
+    width:8px;height:8px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 10px var(--accent-glow);
+  }
+  .sidebar-body{
+    flex:1;
+    padding:16px;
+    overflow-y:auto;
+  }
+  .new-chat-btn{
+    width:100%;
+    padding:11px 14px;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;align-items:center;gap:8px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .new-chat-btn:hover{border-color:var(--accent); background:var(--bg-elevated);}
+
+  .sidebar-nav{
+    margin-top:14px;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .sidebar-nav button{
+    display:flex;align-items:center;gap:10px;
+    width:100%;
+    padding:9px 10px;
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:500;
+    cursor:pointer;
+    text-align:left;
+    transition:background .15s ease, color .15s ease;
+  }
+  .sidebar-nav button:hover{background:var(--bg-elevated); color:var(--text);}
+  .sidebar-nav button.active{background:var(--accent-dim); color:var(--accent);}
+  .sidebar-nav .nav-icon{width:16px; text-align:center; flex-shrink:0;}
+
+  .sidebar-note{
+    margin-top:18px;
+    font-size:11.5px;
+    color:var(--text-faint);
+    line-height:1.6;
+    padding:0 2px;
+  }
+
+  /* Profile block */
+  #profile-block{
+    border-top:1px solid var(--line);
+    padding:14px 16px;
+    position:relative;
+  }
+  .profile-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:6px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .profile-row:hover{background:var(--bg-elevated);}
+  #profile-photo{
+    width:38px;height:38px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid var(--accent);
+    flex-shrink:0;
+    background:var(--bg-elevated);
+  }
+  .profile-info{
+    min-width:0;
+    flex:1;
+  }
+  .profile-name{
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .profile-email{
+    font-size:11.5px;
+    color:var(--text-faint);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .profile-chevron{color:var(--text-faint); font-size:12px; flex-shrink:0;}
+
+  #account-menu{
+    display:none;
+    position:absolute;
+    bottom:calc(100% + 8px);
+    left:16px;
+    right:16px;
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+    box-shadow:0 20px 40px -12px rgba(0,0,0,0.6);
+    z-index:20;
+  }
+  #account-menu.open{display:block;}
+  #account-menu .menu-photo{
+    width:44px;height:44px;border-radius:50%;object-fit:cover;
+    border:2px solid var(--accent);
+    margin-bottom:10px;
+  }
+  #account-menu .menu-name{font-size:14px;font-weight:600;}
+  #account-menu .menu-email{font-size:12px;color:var(--text-dim); margin-bottom:12px;}
+  #logout-btn{
+    width:100%;
+    padding:9px 12px;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--danger);
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  #logout-btn:hover{background:rgba(226,104,92,0.1); border-color:var(--danger);}
+
+  /* Chat area */
+  #chat-area{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    min-width:0;
+  }
+  #chat-topbar{
+    padding:18px 28px;
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  #chat-topbar h2{
+    font-size:15px;
+    font-weight:600;
+    margin:0;
+  }
+  #chat-topbar .topbar-sub{
+    font-size:12px;
+    color:var(--text-faint);
+    margin-top:2px;
+  }
+  #chat-messages{
+    flex:1;
+    overflow-y:auto;
+    padding:28px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  /* ---------- Welcome / empty state ---------- */
+  .empty-state{
+    margin:0 auto;
+    text-align:center;
+    max-width:760px;
+    width:100%;
+    padding-bottom:12px;
+  }
+  .empty-state .display{
+    font-size:24px;
+    color:var(--text);
+    margin-bottom:6px;
+  }
+  .empty-state .welcome-sub{
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.6;
+    margin:0 0 4px;
+  }
+  .empty-state .creator-line{
+    font-size:11.5px;
+    color:var(--text-faint);
+    margin:0 0 34px;
+  }
+
+  .section-block{
+    text-align:left;
+    margin-bottom:30px;
+  }
+  .section-block h3{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-dim);
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    margin:0 0 14px;
+  }
+
+  /* Curiosity cards */
+  .curiosity-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:12px;
+  }
+  .curiosity-card{
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .curiosity-card:hover{border-color:var(--accent); transform:translateY(-2px);}
+  .curiosity-card p{
+    margin:0;
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--text);
+    flex:1;
+  }
+  .curiosity-ask-btn{
+    align-self:flex-start;
+    padding:7px 14px;
+    background:transparent;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .curiosity-ask-btn:hover{background:var(--accent); color:#1a1305;}
+
+  .load-more-row{
+    display:flex;
+    justify-content:center;
+    margin-top:16px;
+  }
+  #load-more-curiosities{
+    padding:10px 20px;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  #load-more-curiosities:hover{border-color:var(--accent); color:var(--text);}
+  #load-more-curiosities:disabled{opacity:0.4; cursor:not-allowed;}
+
+  /* Recommended questions */
+  .recommend-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+    gap:10px;
+  }
+  .recommend-chip{
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    text-align:left;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .recommend-chip:hover{border-color:var(--accent); transform:translateY(-2px);}
+  .recommend-chip .chip-es{
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--text);
+  }
+  .recommend-chip .chip-pt{
+    font-size:11.5px;
+    color:var(--text-faint);
+    margin-top:3px;
+  }
+
+  .msg{
+    max-width:640px;
+    padding:12px 16px;
+    border-radius:var(--radius);
+    font-size:14.5px;
+    line-height:1.55;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    position:relative;
+  }
+  .msg.user{
+    align-self:flex-end;
+    background:var(--user-bubble);
+    border:1px solid var(--line);
+    border-bottom-right-radius:4px;
+  }
+  .msg.bot{
+    align-self:flex-start;
+    background:var(--bot-bubble);
+    border:1px solid var(--line);
+    border-bottom-left-radius:4px;
+  }
+  .msg.bot.typing{color:var(--text-faint); font-style:italic;}
+
+  .msg-copy-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    margin-top:8px;
+    padding:4px 9px;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text-faint);
+    border-radius:7px;
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    font-weight:500;
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .msg-copy-btn:hover{border-color:var(--accent); color:var(--accent);}
+
+  #chat-input-bar{
+    padding:18px 28px 24px;
+    border-top:1px solid var(--line);
+  }
+  #chat-form{
+    display:flex;
+    gap:10px;
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:8px 8px 8px 18px;
+  }
+  #chat-form:focus-within{border-color:var(--accent);}
+  #chat-input{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    padding:10px 0;
+    resize:none;
+  }
+  #chat-send{
+    background:var(--accent);
+    color:#1a1305;
+    border:none;
+    border-radius:9px;
+    width:42px;height:42px;
+    flex-shrink:0;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  #chat-send:hover{transform:translateY(-1px);}
+  #chat-send:disabled{opacity:0.4; cursor:not-allowed; transform:none;}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line); border-radius:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  @media (max-width:760px){
+    #app-screen.active{grid-template-columns:1fr;}
+    #sidebar{
+      position:fixed; z-index:30; width:260px; height:100%;
+      transform:translateX(-100%); transition:transform .2s ease;
+    }
+    #sidebar.open{transform:translateX(0);}
+    #chat-topbar{padding:14px 16px;}
+    #chat-messages{padding:16px;}
+    #chat-input-bar{padding:12px 16px 16px;}
+    .curiosity-grid,.recommend-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOADING SHIM (visible until Firebase resolves auth state) ============ -->
+<div id="boot-loader"><div class="boot-ring"></div></div>
+
+<!-- ============ PANTALLA DE INICIO DE SESIÓN ============ -->
+<div id="login-screen" style="display:none;">
+  <div class="login-card">
+    <div class="login-orbit">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <h1>Bienvenido</h1>
+    <p>Inicia sesión con tu cuenta para acceder al chat de Quetzal AI y mantener tu historial guardado de forma segura.</p>
+
+    <form id="email-form">
+      <input type="text" id="email-input" placeholder="Nombre de usuario" autocomplete="username" required />
+      <input type="password" id="password-input" placeholder="Contraseña" autocomplete="current-password" required />
+      <div class="email-btn-row">
+        <button type="submit" id="email-signin-btn">Iniciar sesión</button>
+        <button type="button" id="email-signup-btn">Crear cuenta</button>
+      </div>
+    </form>
+
+    <div class="login-divider">o</div>
+
+    <button id="guest-btn" type="button">Continuar sin cuenta (invitado)</button>
+
+    <div id="login-error"></div>
+    <div id="config-warning"></div>
+
+    <div class="login-foot">
+      Tu contraseña nunca se comparte con nadie. Elige un nombre de usuario y una contraseña para guardar tu historial, o entra como invitado.
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP (solo aparece después de iniciar sesión) ============ -->
+<div id="app-screen">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand"><span class="brand-dot"></span>Quetzal AI</div>
+    </div>
+    <div class="sidebar-body">
+      <button class="new-chat-btn" id="new-chat-btn">＋ Nuevo chat</button>
+
+      <nav class="sidebar-nav">
+        <button type="button" class="active" id="nav-inicio"><span class="nav-icon">🏠</span>Inicio</button>
+        <button type="button" id="nav-historial"><span class="nav-icon">🕑</span>Historial</button>
+        <button type="button" id="nav-config"><span class="nav-icon">⚙️</span>Configuración</button>
+      </nav>
+
+      <div class="sidebar-note">
+        Tu historial se guarda en este navegador, vinculado a tu cuenta, y no es visible para otras personas.
+      </div>
+    </div>
+
+    <!-- Área de perfil -->
+    <div id="profile-block">
+      <div id="account-menu">
+        <img id="menu-photo" class="menu-photo" src="" alt="Foto de perfil" />
+        <div id="menu-name" class="menu-name"></div>
+        <div id="menu-email" class="menu-email"></div>
+        <button id="logout-btn">Cerrar sesión</button>
+      </div>
+      <div class="profile-row" id="profile-toggle">
+        <img id="profile-photo" src="" alt="Foto de perfil" />
+        <div class="profile-info">
+          <div class="profile-name" id="profile-name">—</div>
+          <div class="profile-email" id="profile-email">—</div>
+        </div>
+        <span class="profile-chevron">▲</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Chat -->
+  <main id="chat-area">
+    <div id="chat-topbar">
+      <div>
+        <h2>Chat</h2>
+        <div class="topbar-sub">Área disponible solo para usuarios autenticados</div>
+      </div>
+    </div>
+
+    <div id="chat-messages">
+      <div class="empty-state" id="empty-state">
+        <div class="display" id="welcome-title">¡Hola! 👋</div>
+        <p class="welcome-sub">Bienvenido a Quetzal AI. ¿Qué quieres descubrir hoy?</p>
+        <p class="creator-line">Criado por João Gabriel • 7º ano</p>
+
+        <div class="section-block">
+          <h3>Curiosidades sobre o México</h3>
+          <div class="curiosity-grid" id="curiosity-grid"></div>
+          <div class="load-more-row">
+            <button type="button" id="load-more-curiosities">Ver mais curiosidades</button>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <h3>Perguntas recomendadas</h3>
+          <div class="recommend-grid" id="recommend-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="chat-input-bar">
+      <form id="chat-form">
+        <textarea id="chat-input" rows="1" placeholder="Escribe tu mensaje..."></textarea>
+        <button id="chat-send" type="submit" title="Enviar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 12L20 4L13 20L11 13L4 12Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================= -->
+<!-- ========================  JAVASCRIPT  ======================== -->
+<!-- ============================================================= -->
+<script type="module">
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signInAnonymously,
+    updateProfile,
+    signOut,
+    onAuthStateChanged,
+    setPersistence,
+    browserLocalPersistence
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  /* =====================================================================
+     CONFIGURACIÓN DE FIREBASE
+     ---------------------------------------------------------------------
+     Pega aquí los datos de TU proyecto Firebase.
+     Dónde encontrarlos: console.firebase.google.com
+       -> selecciona (o crea) tu proyecto
+       -> ⚙️ Configuración del proyecto (Project settings)
+       -> baja hasta "Tus apps" (Your apps) -> app Web (</>)
+       -> la propia pantalla muestra este objeto listo para copiar/pegar.
+
+     Además, activa estos métodos de inicio de sesión en:
+       Authentication -> Sign-in method -> Correo/contraseña -> Habilitar
+       Authentication -> Sign-in method -> Anónimo -> Habilitar
+     (el login se hace con "nombre de usuario" + contraseña; internamente
+     se guarda como un correo falso del tipo usuario@quetzalai.local,
+     así que no hace falta activar el proveedor Google)
+     ===================================================================== */
+  const firebaseConfig = {
+    apiKey: "COLOQUE_AQUI",
+    authDomain: "COLOQUE_AQUI",
+    projectId: "COLOQUE_AQUI",
+    storageBucket: "COLOQUE_AQUI",
+    messagingSenderId: "COLOQUE_AQUI",
+    appId: "COLOQUE_AQUI"
+  };
+
+  /* =====================================================================
+     (OPCIONAL) CLAVE DE LA API GEMINI
+     ---------------------------------------------------------------------
+     Por defecto, este proyecto usa una respuesta simulada (función
+     `getBotReply` más abajo) para no depender de ninguna clave.
+
+     Si quieres activar respuestas reales de Gemini, pega tu clave aquí
+     y descomenta el bloque `fetch` dentro de `getBotReply`.
+
+     ATENCIÓN DE SEGURIDAD: como este archivo corre completamente en el
+     navegador, CUALQUIER clave puesta aquí queda visible para quien
+     inspeccione el código fuente de la página (F12 -> Network/Sources).
+     Esto es aceptable solo para pruebas personales. Para una app real,
+     mueve las llamadas de IA a un backend (p. ej. Cloud Function) que
+     guarde la clave en una variable de entorno, nunca en el frontend.
+     ===================================================================== */
+  const GEMINI_API_KEY = "COLOQUE_SUA_CHAVE_AQUI";
+
+  // ---------------------------------------------------------------------
+  // Verifica si el firebaseConfig todavía tiene los valores de ejemplo.
+  // ---------------------------------------------------------------------
+  const configIsPlaceholder = Object.values(firebaseConfig).some(
+    (v) => !v || v.includes("COLOQUE_AQUI")
+  );
+
+  const app = initializeApp(
+    configIsPlaceholder
+      ? { apiKey: "demo", authDomain: "demo.firebaseapp.com", projectId: "demo" }
+      : firebaseConfig
+  );
+  const auth = getAuth(app);
+
+  // Sufijo usado para transformar el "nombre de usuario" en un correo
+  // falso, ya que Firebase Auth con contraseña exige un formato de e-mail.
+  const USERNAME_DOMAIN = "@quetzalai.local";
+  function usernameToFakeEmail(username) {
+    return username.trim().toLowerCase().replace(/\s+/g, "_") + USERNAME_DOMAIN;
+  }
+
+  // Mantiene la sesión iniciada después de recargar la página (persistencia local).
+  setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.error("Falla al configurar la persistencia de sesión.");
+  });
+
+  // ---------------------------------------------------------------------
+  // Referencias de DOM
+  // ---------------------------------------------------------------------
+  const bootLoader = document.getElementById("boot-loader");
+  const loginScreen = document.getElementById("login-screen");
+  const appScreen = document.getElementById("app-screen");
+  const loginError = document.getElementById("login-error");
+  const configWarning = document.getElementById("config-warning");
+
+  const emailForm = document.getElementById("email-form");
+  const emailInput = document.getElementById("email-input");
+  const passwordInput = document.getElementById("password-input");
+  const emailSigninBtn = document.getElementById("email-signin-btn");
+  const emailSignupBtn = document.getElementById("email-signup-btn");
+  const guestBtn = document.getElementById("guest-btn");
+
+  const profilePhoto = document.getElementById("profile-photo");
+  const profileName = document.getElementById("profile-name");
+  const profileEmail = document.getElementById("profile-email");
+  const profileToggle = document.getElementById("profile-toggle");
+  const accountMenu = document.getElementById("account-menu");
+  const menuPhoto = document.getElementById("menu-photo");
+  const menuName = document.getElementById("menu-name");
+  const menuEmail = document.getElementById("menu-email");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  const chatMessages = document.getElementById("chat-messages");
+  const emptyState = document.getElementById("empty-state");
+  const welcomeTitle = document.getElementById("welcome-title");
+  const chatForm = document.getElementById("chat-form");
+  const chatInput = document.getElementById("chat-input");
+  const chatSend = document.getElementById("chat-send");
+  const newChatBtn = document.getElementById("new-chat-btn");
+
+  const curiosityGrid = document.getElementById("curiosity-grid");
+  const loadMoreBtn = document.getElementById("load-more-curiosities");
+  const recommendGrid = document.getElementById("recommend-grid");
+
+  let currentUser = null;
+
+  // ---------------------------------------------------------------------
+  // CURIOSIDADES SOBRE O MÉXICO (sempre em português — nunca traduzir)
+  // ---------------------------------------------------------------------
+  const CURIOSITIES = [
+    "Por que a bandeira do México tem uma águia?",
+    "Qual é a origem dos tacos?",
+    "Quem foram os astecas?",
+    "Qual é a origem do Dia dos Mortos?",
+    "Por que a Cidade do México está afundando?",
+    "O chocolate surgiu no México?",
+    "De onde vem a palavra \"abacate\"?",
+    "Quais são os vulcões mais famosos do México?",
+    "Como era Tenochtitlán?",
+    "Como Chichén Itzá foi construída?",
+    "Por que o quetzal era considerado uma ave especial?",
+    "Quais civilizações existiam no México antes da chegada dos espanhóis?"
+  ];
+  const CURIOSITIES_PER_PAGE = 4;
+  let curiosityOffset = 0;
+
+  function renderCuriosityBatch() {
+    const batch = CURIOSITIES.slice(curiosityOffset, curiosityOffset + CURIOSITIES_PER_PAGE);
+    batch.forEach((question) => {
+      const card = document.createElement("div");
+      card.className = "curiosity-card";
+      const p = document.createElement("p");
+      p.textContent = question;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "curiosity-ask-btn";
+      btn.textContent = "Perguntar";
+      btn.addEventListener("click", () => sendPresetMessage(question));
+      card.appendChild(p);
+      card.appendChild(btn);
+      curiosityGrid.appendChild(card);
+    });
+    curiosityOffset += batch.length;
+    if (curiosityOffset >= CURIOSITIES.length) {
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = "Não há mais curiosidades";
+    }
+  }
+  loadMoreBtn.addEventListener("click", renderCuriosityBatch);
+
+  // ---------------------------------------------------------------------
+  // PERGUNTAS RECOMENDADAS
+  // Título em português. Cada chip mostra o texto em espanhol (idioma
+  // principal da interface) com a tradução em português embaixo.
+  // A mensagem realmente enviada ao chat é sempre a versão em português.
+  // ---------------------------------------------------------------------
+  const RECOMMENDED = [
+    { es: "Ayúdame con mis estudios", pt: "Ajude-me com meus estudos" },
+    { es: "Explícame un tema",        pt: "Explique um assunto" },
+    { es: "Crea una idea para un juego", pt: "Crie uma ideia para um jogo" },
+    { es: "Ayúdame a programar",      pt: "Ajude-me a programar" },
+    { es: "Cuéntame algo interesante", pt: "Conte-me algo interessante" },
+    { es: "Resuelve una duda",        pt: "Tire uma dúvida" }
+  ];
+
+  function renderRecommended() {
+    RECOMMENDED.forEach((item) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "recommend-chip";
+      chip.innerHTML =
+        `<div class="chip-es">${item.es}</div><div class="chip-pt">${item.pt}</div>`;
+      chip.addEventListener("click", () => sendPresetMessage(item.pt));
+      recommendGrid.appendChild(chip);
+    });
+  }
+
+  function sendPresetMessage(text) {
+    if (!currentUser) return;
+    chatInput.value = text;
+    chatForm.requestSubmit();
+  }
+
+  // ---------------------------------------------------------------------
+  // Traduce los códigos de error más comunes de Firebase Auth.
+  // ---------------------------------------------------------------------
+  function friendlyAuthError(err) {
+    const code = err && err.code ? err.code : "";
+    const map = {
+      "auth/popup-blocked": "Tu navegador bloqueó la ventana de inicio de sesión. Permite ventanas emergentes para este sitio e inténtalo de nuevo.",
+      "auth/popup-closed-by-user": "La ventana de inicio de sesión se cerró antes de terminar. Inténtalo de nuevo.",
+      "auth/cancelled-popup-request": "Inicio de sesión cancelado. Inténtalo de nuevo.",
+      "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase. Agrégalo en Authentication → Settings → Authorized domains.",
+      "auth/network-request-failed": "Falla de conexión. Verifica tu internet e inténtalo de nuevo.",
+      "auth/invalid-api-key": "La clave (apiKey) de Firebase es incorrecta. Revisa el firebaseConfig.",
+      "auth/operation-not-allowed": "Ese método de inicio de sesión no está habilitado en la consola de Firebase (Authentication → Sign-in method).",
+      "auth/invalid-email": "Nombre de usuario inválido. Usa solo letras, números y espacios.",
+      "auth/user-not-found": "No existe una cuenta con ese nombre de usuario. Intenta crear una cuenta.",
+      "auth/wrong-password": "Contraseña incorrecta.",
+      "auth/invalid-credential": "Usuario o contraseña incorrectos.",
+      "auth/email-already-in-use": "Ya existe una cuenta con ese nombre de usuario. Intenta iniciar sesión en vez de crear una nueva.",
+      "auth/weak-password": "La contraseña debe tener al menos 6 caracteres.",
+      "auth/too-many-requests": "Demasiados intentos. Espera un momento antes de volver a intentarlo.",
+    };
+    return map[code] || `No fue posible autenticar (${code || err.message}). Inténtalo de nuevo.`;
+  }
+
+  function showError(msg) {
+    loginError.textContent = msg;
+    loginError.style.display = "block";
+  }
+
+  if (configIsPlaceholder) {
+    emailForm.querySelectorAll("input,button").forEach((el) => (el.disabled = true));
+    emailForm.style.opacity = "0.5";
+    guestBtn.disabled = true;
+    guestBtn.style.opacity = "0.5";
+    configWarning.style.display = "block";
+    configWarning.innerHTML =
+      "⚠️ El inicio de sesión todavía no va a funcionar porque el <code>firebaseConfig</code> en el código " +
+      "sigue con los valores de ejemplo (<code>COLOQUE_AQUI</code>). " +
+      "Crea un proyecto gratis en console.firebase.google.com y activa " +
+      "<b>Authentication → Sign-in method → Correo/contraseña</b> (y, si quieres, también " +
+      "<b>Anónimo</b>), copia el objeto de configuración " +
+      "de la app Web y pégalo en lugar de los <code>COLOQUE_AQUI</code> en el archivo.";
+  }
+
+  // ---------------------------------------------------------------------
+  // INICIO DE SESIÓN con nombre de usuario y contraseña
+  // (por debajo se usa Firebase Auth con correo/contraseña, convirtiendo
+  // el nombre de usuario en un correo falso — el usuario nunca ve eso)
+  // ---------------------------------------------------------------------
+  emailForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    loginError.style.display = "none";
+    const username = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!username || !password) return;
+
+    emailSigninBtn.disabled = true;
+    try {
+      await signInWithEmailAndPassword(auth, usernameToFakeEmail(username), password);
+    } catch (err) {
+      console.error("Error en el inicio de sesión:", err.code || err.message);
+      showError(friendlyAuthError(err));
+    } finally {
+      emailSigninBtn.disabled = false;
+    }
+  });
+
+  emailSignupBtn.addEventListener("click", async () => {
+    loginError.style.display = "none";
+    const username = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!username || !password) {
+      showError("Completa nombre de usuario y contraseña para crear la cuenta.");
+      return;
+    }
+
+    emailSignupBtn.disabled = true;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, usernameToFakeEmail(username), password);
+      await updateProfile(cred.user, { displayName: username });
+    } catch (err) {
+      console.error("Error al crear la cuenta:", err.code || err.message);
+      showError(friendlyAuthError(err));
+    } finally {
+      emailSignupBtn.disabled = false;
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // INICIO DE SESIÓN como invitado (anónimo)
+  // ---------------------------------------------------------------------
+  guestBtn.addEventListener("click", async () => {
+    loginError.style.display = "none";
+    guestBtn.disabled = true;
+    try {
+      await signInAnonymously(auth);
+    } catch (err) {
+      console.error("Error en el inicio de sesión anónimo:", err.code || err.message);
+      showError(friendlyAuthError(err));
+    } finally {
+      guestBtn.disabled = false;
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // LOGOUT
+  // ---------------------------------------------------------------------
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      accountMenu.classList.remove("open");
+    } catch (err) {
+      console.error("Error al cerrar sesión.");
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Detecta si hay un usuario conectado (también corre después de F5)
+  // ---------------------------------------------------------------------
+  onAuthStateChanged(auth, (user) => {
+    bootLoader.style.display = "none";
+
+    if (user) {
+      currentUser = user;
+      showApp(user);
+    } else {
+      currentUser = null;
+      showLogin();
+    }
+  });
+
+  function showLogin() {
+    loginScreen.style.display = "flex";
+    appScreen.classList.remove("active");
+  }
+
+  function showApp(user) {
+    loginScreen.style.display = "none";
+    appScreen.classList.add("active");
+
+    const isGuest = user.isAnonymous;
+    const photo = user.photoURL || fallbackAvatar(user.displayName || "Usuario");
+    const name = user.displayName || (isGuest ? "Invitado" : "Usuario");
+    const email = isGuest ? "Sesión de invitado (sin cuenta)" : "Cuenta con nombre de usuario";
+
+    profilePhoto.src = photo;
+    profileName.textContent = name;
+    profileEmail.textContent = email;
+
+    menuPhoto.src = photo;
+    menuName.textContent = name;
+    menuEmail.textContent = email;
+
+    welcomeTitle.textContent = `¡Hola, ${name}! 👋`;
+
+    loadHistory(user.uid);
+  }
+
+  function fallbackAvatar(seed) {
+    const initial = (seed || "?").trim().charAt(0).toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">
+      <rect width="80" height="80" fill="#232B37"/>
+      <text x="50%" y="55%" font-family="Inter,sans-serif" font-size="34" fill="#E3A857"
+        text-anchor="middle" dominant-baseline="middle">${initial}</text>
+    </svg>`;
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+  }
+
+  // ---------------------------------------------------------------------
+  // Menú de cuenta (abre/cierra)
+  // ---------------------------------------------------------------------
+  profileToggle.addEventListener("click", () => {
+    accountMenu.classList.toggle("open");
+  });
+  document.addEventListener("click", (e) => {
+    if (!accountMenu.contains(e.target) && !profileToggle.contains(e.target)) {
+      accountMenu.classList.remove("open");
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Navegación lateral (Inicio / Historial / Configuración)
+  // Son marcadores visuales simples; solo "Inicio" hace algo por ahora.
+  // ---------------------------------------------------------------------
+  const navInicio = document.getElementById("nav-inicio");
+  const navHistorial = document.getElementById("nav-historial");
+  const navConfig = document.getElementById("nav-config");
+  [navInicio, navHistorial, navConfig].forEach((btn) => {
+    btn.addEventListener("click", () => {
+      [navInicio, navHistorial, navConfig].forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // HISTORIAL DE CHAT POR USUARIO
+  // Clave: chatHistory_<uid> -> cada uid tiene su propio arreglo
+  // ---------------------------------------------------------------------
+  function historyKey(uid) {
+    return `chatHistory_${uid}`;
+  }
+
+  function loadHistory(uid) {
+    chatMessages.innerHTML = "";
+    const raw = localStorage.getItem(historyKey(uid));
+    const history = raw ? JSON.parse(raw) : [];
+
+    if (history.length === 0) {
+      resetEmptyState();
+      chatMessages.appendChild(emptyState);
+      return;
+    }
+    history.forEach((m) => renderMessage(m.role, m.text, false));
+    scrollToBottom();
+  }
+
+  function saveMessage(uid, role, text) {
+    const key = historyKey(uid);
+    const raw = localStorage.getItem(key);
+    const history = raw ? JSON.parse(raw) : [];
+    history.push({ role, text, ts: Date.now() });
+    localStorage.setItem(key, JSON.stringify(history));
+  }
+
+  function clearHistory(uid) {
+    localStorage.removeItem(historyKey(uid));
+    chatMessages.innerHTML = "";
+    resetEmptyState();
+    chatMessages.appendChild(emptyState);
+  }
+
+  function resetEmptyState() {
+    curiosityGrid.innerHTML = "";
+    recommendGrid.innerHTML = "";
+    curiosityOffset = 0;
+    loadMoreBtn.disabled = false;
+    loadMoreBtn.textContent = "Ver mais curiosidades";
+    renderCuriosityBatch();
+    renderRecommended();
+  }
+
+  newChatBtn.addEventListener("click", () => {
+    if (!currentUser) return;
+    clearHistory(currentUser.uid);
+  });
+
+  // ---------------------------------------------------------------------
+  // Renderización de mensajes
+  // ---------------------------------------------------------------------
+  function renderMessage(role, text, animate = true) {
+    if (emptyState.parentElement === chatMessages) {
+      chatMessages.removeChild(emptyState);
+    }
+    const bubble = document.createElement("div");
+    bubble.className = `msg ${role === "user" ? "user" : "bot"}`;
+
+    const textNode = document.createElement("div");
+    textNode.textContent = text;
+    bubble.appendChild(textNode);
+
+    if (role !== "user") {
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "msg-copy-btn";
+      copyBtn.textContent = "Copiar";
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          copyBtn.textContent = "Copiado";
+          setTimeout(() => (copyBtn.textContent = "Copiar"), 1600);
+        } catch (err) {
+          console.error("No se pudo copiar el mensaje.");
+        }
+      });
+      bubble.appendChild(copyBtn);
+    }
+
+    chatMessages.appendChild(bubble);
+    if (animate) scrollToBottom();
+    return bubble;
+  }
+
+  function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // ---------------------------------------------------------------------
+  // Envío de mensaje — el chat solo funciona para usuarios autenticados,
+  // ya que este formulario solo es accesible dentro de #app-screen.
+  // ---------------------------------------------------------------------
+  chatForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    chatInput.value = "";
+    renderMessage("user", text);
+    saveMessage(currentUser.uid, "user", text);
+
+    const typingBubble = renderMessage("bot", "Pensando...", true);
+    typingBubble.classList.add("typing");
+
+    try {
+      const reply = await getBotReply(text);
+      typingBubble.remove();
+      renderMessage("bot", reply);
+      saveMessage(currentUser.uid, "bot", reply);
+    } catch (err) {
+      typingBubble.remove();
+      const fallback = "No pude responder en este momento. Inténtalo de nuevo en unos instantes.";
+      renderMessage("bot", fallback);
+      saveMessage(currentUser.uid, "bot", fallback);
+    }
+  });
+
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      chatForm.requestSubmit();
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Respuesta del asistente.
+  // Por defecto: respuesta simulada (no depende de ninguna clave/API).
+  // Para usar Gemini de verdad, completa GEMINI_API_KEY arriba y activa
+  // el bloque fetch de abajo.
+  //
+  // IMPORTANTE (regla de idiomas): el modelo debe responder en el MISMO
+  // idioma que el usuario usó al escribir. Como las curiosidades y las
+  // preguntas recomendadas están en portugués, Quetzal AI responderá
+  // naturalmente en portugués cuando el usuario las use — no se fuerza
+  // ninguna traducción aquí, el propio prompt del usuario ya define el
+  // idioma de la respuesta.
+  // ---------------------------------------------------------------------
+  async function getBotReply(userText) {
+    if (!GEMINI_API_KEY || GEMINI_API_KEY.includes("COLOQUE_SUA_CHAVE_AQUI")) {
+      // Respuesta simulada: eco simple, para probar la interfaz sin clave.
+      await new Promise((r) => setTimeout(r, 500));
+      return `Aún no tengo una clave de Gemini configurada, pero recibí tu mensaje: "${userText}"`;
+    }
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userText }] }]
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Error en la API de Gemini:", data);
+      throw new Error(data.error?.message || "Error en la API de Gemini.");
+    }
+
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Sin respuesta.";
+  }
+</script>
+</body>
+</html>
